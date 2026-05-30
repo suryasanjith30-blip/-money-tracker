@@ -1,0 +1,943 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Expense Tracker | Ultimate Pro</title>
+
+    <!-- External Libraries for PDF Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+    <!-- Link to external CSS -->
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Setup Overlay -->
+    <div id="income-overlay">
+      <div class="auth-box animate-fade">
+        <h2>👑 Welcome to Pro!</h2>
+        <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 24px">
+          Let's set up your primary income stream to unlock automation.
+        </p>
+        <input
+          id="initial-salary"
+          type="number"
+          min="1"
+          class="input-field"
+          placeholder="Monthly Salary (₹)"
+        />
+        <input
+          id="initial-salary-date"
+          type="number"
+          min="1"
+          max="28"
+          class="input-field"
+          placeholder="Payday (Date: 1-28)"
+        />
+        <button id="btn-set-income" class="btn-action">Start Tracking</button>
+      </div>
+    </div>
+
+    <!-- Auth Screen -->
+    <div id="auth-screen">
+      <div class="auth-box animate-fade">
+        <div
+          style="
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 24px;
+            color: var(--primary);
+          "
+        >
+          Ultimate<span style="color: var(--text-main)">Pro</span>
+        </div>
+        <input id="user-in" class="input-field" placeholder="Username" />
+        <input
+          id="pass-in"
+          type="password"
+          class="input-field"
+          placeholder="Password"
+        />
+        <div id="signup-extras" class="hidden">
+          <div
+            id="pass-msg"
+            style="font-size: 11px; margin-bottom: 10px; font-weight: 600"
+          ></div>
+          <input
+            id="confirm-in"
+            type="password"
+            class="input-field"
+            placeholder="Confirm Password"
+          />
+        </div>
+        <button id="main-auth-btn" class="btn-action">Log In</button>
+        <p style="font-size: 14px; margin-top: 20px; color: var(--text-dim)">
+          <span id="switch-prompt">New user?</span>
+          <span
+            id="btn-toggle-auth"
+            style="color: var(--primary); cursor: pointer; font-weight: 600"
+            >Click here</span
+          >
+        </p>
+      </div>
+    </div>
+
+    <!-- Day Details Modal -->
+    <div id="day-modal">
+      <div class="modal-box animate-fade">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+          "
+        >
+          <h3
+            id="modal-date-title"
+            style="margin: 0; font-size: 20px; color: var(--primary)"
+          >
+            Details
+          </h3>
+          <button
+            id="btn-close-modal"
+            class="delete-btn"
+            style="font-size: 28px; line-height: 1"
+          >
+            ×
+          </button>
+        </div>
+        <div id="modal-content">
+          <!-- Content populated via JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Date Modal -->
+    <div id="edit-date-modal">
+      <div class="modal-box animate-fade">
+        <h3 style="margin-top: 0; color: var(--primary)">✏️ Edit Date</h3>
+        <p
+          id="edit-date-desc"
+          style="font-size: 13px; color: var(--text-dim); margin-bottom: 20px"
+        ></p>
+        <input id="new-tx-date" type="date" class="input-field" />
+        <div style="display: flex; gap: 10px; margin-top: 20px">
+          <button
+            id="btn-cancel-date"
+            class="btn-action"
+            style="
+              background: rgba(0, 0, 0, 0.2);
+              border: 1px solid var(--border);
+              box-shadow: none;
+            "
+          >
+            Cancel
+          </button>
+          <button id="btn-save-date" class="btn-action">Save Date</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="app-screen">
+      <nav class="sidebar">
+        <div
+          style="
+            font-weight: 800;
+            font-size: 20px;
+            margin-bottom: 40px;
+            letter-spacing: 1px;
+            background: -webkit-linear-gradient(45deg, #d4af37, #fde047);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+          "
+        >
+          PRO TRACKER
+        </div>
+        <div class="nav-item active" data-target="home">🏠 Dashboard</div>
+        <div class="nav-item" data-target="calendar">📅 Calendar</div>
+        <div class="nav-item" data-target="pockets">🏦 Goals & Pockets</div>
+        <div class="nav-item" data-target="subs">🔄 Subscriptions</div>
+        <div class="nav-item" data-target="market">📈 Market & Portfolio</div>
+        <div class="nav-item" data-target="split">👥 Split Billing</div>
+        <div class="nav-item" data-target="settings">⚙️ Settings</div>
+        <button
+          id="btn-logout"
+          class="btn-action"
+          style="
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            margin-top: auto;
+            box-shadow: none;
+          "
+        >
+          Log Out
+        </button>
+      </nav>
+
+      <main class="content">
+        <!-- Dashboard Tab -->
+        <div id="home" class="page">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-end;
+              margin-bottom: 28px;
+            "
+          >
+            <div>
+              <h2
+                id="greeting-ui"
+                style="margin: 0; font-size: 28px; color: var(--text-main)"
+              >
+                Good Morning!
+              </h2>
+              <p
+                id="date-ui"
+                style="
+                  margin: 6px 0 0;
+                  color: var(--text-dim);
+                  font-size: 14px;
+                  font-weight: 500;
+                "
+              ></p>
+            </div>
+          </div>
+
+          <div
+            style="
+              display: grid;
+              grid-template-columns: 1fr 1fr 1.2fr;
+              gap: 24px;
+              margin-bottom: 24px;
+            "
+          >
+            <!-- 3D Flip Card for Balance -->
+            <div id="balance-flip-container" class="flip-container">
+              <div class="flipper">
+                <div
+                  class="card flip-front"
+                  style="
+                    background: linear-gradient(
+                      135deg,
+                      rgba(124, 58, 237, 0.9),
+                      rgba(46, 16, 101, 0.95)
+                    );
+                    border: 1px solid rgba(212, 175, 55, 0.3);
+                    box-shadow: 0 10px 30px rgba(124, 58, 237, 0.3);
+                  "
+                >
+                  <p
+                    style="
+                      font-size: 11px;
+                      margin: 0;
+                      opacity: 0.9;
+                      font-weight: 700;
+                      color: #d4af37;
+                      letter-spacing: 1px;
+                    "
+                  >
+                    AVAILABLE BALANCE
+                  </p>
+                  <h1
+                    id="total-bal-ui"
+                    style="
+                      margin: 10px 0 0;
+                      font-size: 36px;
+                      color: white;
+                      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+                    "
+                  >
+                    ₹0
+                  </h1>
+                </div>
+                <div
+                  class="card flip-back"
+                  style="
+                    background: linear-gradient(
+                      135deg,
+                      rgba(46, 16, 101, 0.95),
+                      rgba(124, 58, 237, 0.9)
+                    );
+                    border: 1px solid rgba(212, 175, 55, 0.3);
+                    box-shadow: 0 10px 30px rgba(124, 58, 237, 0.3);
+                  "
+                >
+                  <p
+                    style="
+                      font-size: 11px;
+                      margin: 0;
+                      opacity: 0.9;
+                      font-weight: 700;
+                      color: #d4af37;
+                      letter-spacing: 1px;
+                    "
+                  >
+                    IN WORDS
+                  </p>
+                  <h3
+                    id="total-bal-words"
+                    style="
+                      margin: 10px 0 0;
+                      font-size: 18px;
+                      color: white;
+                      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+                      line-height: 1.4;
+                    "
+                  >
+                    Zero Rupees
+                  </h3>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <p
+                style="
+                  font-size: 11px;
+                  margin: 0;
+                  color: var(--text-dim);
+                  font-weight: 700;
+                  letter-spacing: 1px;
+                "
+              >
+                DAILY SAFE SPEND
+              </p>
+              <h1 id="daily-safe-ui" style="margin: 10px 0 0; font-size: 36px">
+                ₹0
+              </h1>
+            </div>
+            <div class="card">
+              <p
+                style="
+                  font-size: 11px;
+                  margin: 0;
+                  color: var(--text-dim);
+                  font-weight: 700;
+                  letter-spacing: 1px;
+                "
+              >
+                BUDGET CONSUMED
+              </p>
+              <div class="progress-container">
+                <div id="goal-bar" class="progress-bar"></div>
+              </div>
+              <p
+                id="goal-text"
+                style="
+                  font-size: 11px;
+                  margin: 0;
+                  font-weight: 700;
+                  text-align: right;
+                "
+              ></p>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px">
+            <div class="card">
+              <h3 style="margin-top: 0">Add Transaction</h3>
+              <input
+                id="exp-desc"
+                class="input-field"
+                placeholder="Description"
+              />
+              <input
+                id="exp-amt"
+                type="number"
+                min="1"
+                class="input-field"
+                placeholder="Amount (₹)"
+              />
+              <label>Date</label>
+              <input id="exp-date" type="date" class="input-field" />
+              <select id="exp-cat" class="input-field">
+                <option value="Income">💵 Income / Deposit</option>
+                <option value="Food">🍕 Food</option>
+                <option value="Groceries">🛒 Groceries</option>
+                <option value="Travel">🚗 Travel</option>
+                <option value="Shopping">🛍️ Shopping</option>
+                <option value="Bills" selected>📄 Bills</option>
+                <option value="Utilities">💡 Utilities</option>
+                <option value="Rent">🏠 Rent</option>
+                <option value="Health">⚕️ Health</option>
+                <option value="Personal">💅 Personal Care</option>
+                <option value="Investment">📈 Investment</option>
+                <option value="Education">🎓 Education</option>
+                <option value="Entertainment">🎬 Entertainment</option>
+                <option value="Gifts">🎁 Gifts</option>
+                <option value="Other">📌 Other</option>
+              </select>
+              <button id="btn-save-exp" class="btn-action">
+                Save Transaction
+              </button>
+            </div>
+            <div
+              class="card"
+              style="display: flex; flex-direction: column; align-items: center"
+            >
+              <h3
+                style="
+                  align-self: flex-start;
+                  margin-top: 0;
+                  margin-bottom: 20px;
+                "
+              >
+                Category Breakdown
+              </h3>
+              <canvas id="expenseChart" width="260" height="260"></canvas>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 style="margin-top: 0">History & Search</h3>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 1.5fr 1fr 1fr 1fr auto;
+                gap: 12px;
+                margin-bottom: 20px;
+                align-items: end;
+              "
+            >
+              <div>
+                <label>Keyword</label
+                ><input
+                  id="search-history"
+                  class="input-field"
+                  style="margin: 0"
+                  placeholder="Search..."
+                />
+              </div>
+              <div>
+                <label>Category</label>
+                <select id="filter-cat" class="input-field" style="margin: 0">
+                  <option value="All">All Categories</option>
+                  <option value="Income">Income</option>
+                  <option value="Food">Food</option>
+                  <option value="Groceries">Groceries</option>
+                  <option value="Travel">Travel</option>
+                  <option value="Shopping">Shopping</option>
+                  <option value="Bills">Bills</option>
+                  <option value="Utilities">Utilities</option>
+                  <option value="Rent">Rent</option>
+                  <option value="Health">Health</option>
+                  <option value="Personal">Personal Care</option>
+                  <option value="Investment">Investment</option>
+                  <option value="Education">Education</option>
+                  <option value="Entertainment">Entertainment</option>
+                  <option value="Gifts">Gifts</option>
+                  <option value="Other">Other</option>
+                  <option value="Transfer">Transfer</option>
+                </select>
+              </div>
+              <div>
+                <label>From</label
+                ><input
+                  id="filter-start"
+                  type="date"
+                  class="input-field"
+                  style="margin: 0"
+                />
+              </div>
+              <div>
+                <label>To</label
+                ><input
+                  id="filter-end"
+                  type="date"
+                  class="input-field"
+                  style="margin: 0"
+                />
+              </div>
+              <button
+                id="btn-clear-filters"
+                class="btn-action btn-small"
+                style="
+                  padding: 12px;
+                  background: rgba(0, 0, 0, 0.2);
+                  border: 1px solid var(--border);
+                  box-shadow: none;
+                "
+              >
+                Reset
+              </button>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>User</th>
+                  <th>Description</th>
+                  <th>Category</th>
+                  <th>Amount</th>
+                  <th style="text-align: center">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="history-body"></tbody>
+            </table>
+
+            <div
+              style="
+                display: flex;
+                gap: 12px;
+                margin-top: 24px;
+                padding-top: 15px;
+                border-top: 1px solid var(--border);
+              "
+            >
+              <button
+                id="btn-export-csv"
+                class="btn-action btn-small"
+                style="
+                  width: auto;
+                  padding: 10px 20px;
+                  background: rgba(0, 0, 0, 0.2);
+                  border: 1px solid var(--border);
+                  box-shadow: none;
+                "
+              >
+                ⬇️ Export CSV
+              </button>
+              <button
+                id="btn-export-pdf"
+                class="btn-action btn-small"
+                style="
+                  width: auto;
+                  padding: 10px 20px;
+                  background: rgba(0, 0, 0, 0.2);
+                  border: 1px solid var(--border);
+                  box-shadow: none;
+                "
+              >
+                📄 Export PDF
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Full Calendar Tab -->
+        <div id="calendar" class="page hidden">
+          <div class="card" style="min-height: 80vh">
+            <div
+              class="cal-header-controls"
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 30px;
+              "
+            >
+              <h3 style="margin: 0; font-size: 24px">Daily Spend Calendar</h3>
+
+              <div style="display: flex; align-items: center; gap: 8px">
+                <button
+                  id="btn-prev-month"
+                  class="btn-action btn-small"
+                  style="
+                    background: rgba(0, 0, 0, 0.2);
+                    border: 1px solid var(--border);
+                    box-shadow: none;
+                    padding: 10px 15px;
+                    font-size: 16px;
+                  "
+                >
+                  &lt;
+                </button>
+                <div style="display: flex; gap: 6px">
+                  <select
+                    id="cal-month-select"
+                    class="input-field"
+                    style="
+                      margin: 0;
+                      padding: 10px 8px;
+                      width: auto;
+                      font-size: 15px;
+                      font-weight: bold;
+                      color: var(--primary);
+                      cursor: pointer;
+                    "
+                  ></select>
+                  <select
+                    id="cal-year-select"
+                    class="input-field"
+                    style="
+                      margin: 0;
+                      padding: 10px 8px;
+                      width: auto;
+                      font-size: 15px;
+                      font-weight: bold;
+                      color: var(--primary);
+                      cursor: pointer;
+                    "
+                  ></select>
+                </div>
+                <button
+                  id="btn-next-month"
+                  class="btn-action btn-small"
+                  style="
+                    background: rgba(0, 0, 0, 0.2);
+                    border: 1px solid var(--border);
+                    box-shadow: none;
+                    padding: 10px 15px;
+                    font-size: 16px;
+                  "
+                >
+                  &gt;
+                </button>
+              </div>
+            </div>
+            <p
+              style="
+                font-size: 14px;
+                color: var(--text-dim);
+                margin-bottom: 20px;
+              "
+            >
+              Use the dropdowns or arrows to change the date. Click on any date
+              to view a detailed breakdown.
+            </p>
+            <div id="full-calendar-grid" class="cal-page-grid"></div>
+          </div>
+        </div>
+
+        <!-- Pockets Tab -->
+        <div id="pockets" class="page hidden">
+          <div class="card">
+            <h3 style="margin-top: 0">Savings Goals & Pockets</h3>
+            <p
+              style="
+                font-size: 13px;
+                color: var(--text-dim);
+                margin-bottom: 20px;
+              "
+            >
+              Lock money away securely. Transfers to pockets are deducted from
+              your available balance but do not count against your monthly
+              budget constraint.
+            </p>
+            <div style="display: flex; gap: 12px; margin-bottom: 30px">
+              <input
+                id="pocket-name"
+                class="input-field"
+                style="margin: 0"
+                placeholder="Pocket Name (e.g. Vacation)"
+              />
+              <input
+                id="pocket-target"
+                type="number"
+                min="1"
+                class="input-field"
+                style="margin: 0"
+                placeholder="Target Amount (₹)"
+              />
+              <button
+                id="btn-add-pocket"
+                class="btn-action"
+                style="width: 150px"
+              >
+                Create Pocket
+              </button>
+            </div>
+            <div id="pockets-list"></div>
+          </div>
+        </div>
+
+        <!-- Subs Tab -->
+        <div id="subs" class="page hidden">
+          <div class="card">
+            <h3 style="margin-top: 0">Auto-Billing Subscription Engine</h3>
+            <p
+              style="
+                font-size: 13px;
+                color: var(--text-dim);
+                margin-bottom: 20px;
+              "
+            >
+              The system will automatically generate a transaction and deduct
+              funds on the billing day you specify each month.
+            </p>
+            <div style="display: flex; gap: 12px">
+              <input
+                id="sub-name"
+                class="input-field"
+                style="margin: 0"
+                placeholder="Netflix, Gym..."
+              />
+              <input
+                id="sub-amt"
+                type="number"
+                min="1"
+                class="input-field"
+                style="margin: 0"
+                placeholder="₹ per month"
+              />
+              <input
+                id="sub-day"
+                type="number"
+                min="1"
+                max="28"
+                class="input-field"
+                style="margin: 0; width: 150px"
+                placeholder="Bill Day (1-28)"
+              />
+              <button id="btn-add-sub" class="btn-action" style="width: 150px">
+                Add Sub
+              </button>
+            </div>
+            <div id="subs-list" style="margin-top: 24px"></div>
+          </div>
+        </div>
+
+        <!-- Market & Portfolio Tab -->
+        <div id="market" class="page hidden">
+          <div class="card">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+              "
+            >
+              <h3 style="margin-top: 0">Live Market & Purchasing Power</h3>
+              <button id="btn-refresh-market" class="btn-action btn-small">
+                Refresh Data 🔄
+              </button>
+            </div>
+            <p
+              style="
+                font-size: 13px;
+                color: var(--text-dim);
+                margin-bottom: 20px;
+              "
+            >
+              Analyze stock affordability and execute simulated trades based on
+              your current ₹ wallet balance.
+            </p>
+            <table id="market-list-ui"></table>
+
+            <h3
+              style="
+                margin-top: 40px;
+                margin-bottom: 15px;
+                border-top: 1px solid var(--border);
+                padding-top: 20px;
+              "
+            >
+              My Virtual Portfolio
+            </h3>
+            <table id="portfolio-list-ui"></table>
+          </div>
+        </div>
+
+        <!-- Split Billing Tab -->
+        <div id="split" class="page hidden">
+          <div class="card">
+            <h3 style="margin-top: 0">People & Split Billing</h3>
+            <div style="display: flex; gap: 12px">
+              <input
+                id="person-name"
+                class="input-field"
+                placeholder="Friend Name"
+                style="margin: 0"
+              />
+              <button
+                id="btn-add-person"
+                class="btn-action"
+                style="width: 140px; margin: 0"
+              >
+                Add Person
+              </button>
+            </div>
+            <div id="person-list" style="margin-top: 24px"></div>
+          </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="settings" class="page hidden">
+          <div class="card">
+            <h3 style="margin-top: 0">⚙️ Settings</h3>
+
+            <div style="margin-bottom: 32px">
+              <label>Appearance Theme</label>
+              <div style="display: flex; gap: 12px; margin-top: 10px">
+                <button
+                  class="btn-action theme-btn"
+                  data-theme-val="dark"
+                  style="
+                    background: rgba(30, 20, 60, 0.8);
+                    border: 1px solid var(--border);
+                  "
+                >
+                  👑 Royal Dark
+                </button>
+                <button
+                  class="btn-action theme-btn"
+                  data-theme-val="light"
+                  style="
+                    background: rgba(255, 255, 255, 0.8);
+                    color: #0f172a;
+                    border: 1px solid rgba(109, 40, 217, 0.2);
+                  "
+                >
+                  💎 Pearl Light
+                </button>
+              </div>
+            </div>
+
+            <div
+              style="
+                margin-bottom: 32px;
+                border-top: 1px solid var(--border);
+                padding-top: 24px;
+              "
+            >
+              <label>Update Automated Salary & Payday</label>
+              <div
+                style="
+                  display: flex;
+                  gap: 12px;
+                  align-items: center;
+                  margin-top: 10px;
+                "
+              >
+                <input
+                  id="set-salary-amt"
+                  type="number"
+                  min="1"
+                  class="input-field"
+                  style="max-width: 200px; margin: 0"
+                  placeholder="New Salary (₹)"
+                />
+                <input
+                  id="set-salary-date"
+                  type="number"
+                  min="1"
+                  max="28"
+                  class="input-field"
+                  style="max-width: 150px; margin: 0"
+                  placeholder="Payday (1-28)"
+                />
+                <button
+                  id="btn-update-salary"
+                  class="btn-action"
+                  style="width: auto; padding: 12px 24px; margin: 0"
+                >
+                  Update
+                </button>
+              </div>
+            </div>
+
+            <div
+              style="
+                margin-bottom: 32px;
+                border-top: 1px solid var(--border);
+                padding-top: 24px;
+              "
+            >
+              <label>Update Monthly Spend Target</label>
+              <div
+                style="
+                  display: flex;
+                  gap: 12px;
+                  align-items: center;
+                  margin-top: 10px;
+                "
+              >
+                <input
+                  id="set-goal-input"
+                  type="number"
+                  min="1"
+                  class="input-field"
+                  style="max-width: 250px; margin: 0"
+                  placeholder="New Target (₹)"
+                />
+                <button
+                  id="btn-update-limit"
+                  class="btn-action"
+                  style="width: auto; padding: 12px 24px; margin: 0"
+                >
+                  Update
+                </button>
+              </div>
+            </div>
+
+            <!-- Hidden Time Travel Settings -->
+            <div style="border-top: 1px solid var(--border); padding-top: 24px">
+              <p style="font-size: 14px; margin-bottom: 10px">
+                Want to test another date?
+              </p>
+              <button
+                id="btn-reveal-time-travel"
+                class="btn-action btn-small"
+                style="
+                  background: rgba(0, 0, 0, 0.2);
+                  border: 1px solid var(--border);
+                  box-shadow: none;
+                  padding: 8px 16px;
+                "
+              >
+                Yes, show time travel options
+              </button>
+
+              <div
+                id="time-travel-controls"
+                class="hidden"
+                style="margin-top: 20px"
+              >
+                <label>Time Travel (Simulate System Date)</label>
+                <p
+                  style="
+                    font-size: 11px;
+                    color: var(--text-dim);
+                    margin-top: 4px;
+                    margin-bottom: 12px;
+                  "
+                >
+                  Change the app's current date to test auto-billing and see
+                  future/past states.
+                </p>
+                <div style="display: flex; gap: 12px; align-items: center">
+                  <input
+                    id="sys-date-override"
+                    type="date"
+                    class="input-field"
+                    style="max-width: 200px; margin: 0"
+                  />
+                  <button
+                    id="btn-update-sys-date"
+                    class="btn-action"
+                    style="width: auto; padding: 12px 24px; margin: 0"
+                  >
+                    Time Travel 🚀
+                  </button>
+                  <button
+                    id="btn-reset-sys-date"
+                    class="btn-action"
+                    style="
+                      width: auto;
+                      padding: 12px 24px;
+                      margin: 0;
+                      background: rgba(0, 0, 0, 0.2);
+                      border: 1px solid var(--border);
+                      box-shadow: none;
+                      color: var(--text-dim);
+                    "
+                  >
+                    Reset
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Link to external JS -->
+    <script src="script.js"></script>
+  </body>
+</html>
