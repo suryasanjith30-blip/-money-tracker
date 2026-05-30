@@ -1,0 +1,1 @@
+in this  money tracker we can track our daily expenses and we have added a other intersting options like adding our expense based on  specific dates and we can export the history to pdf snd csv files there in filter option in history
